@@ -1,4 +1,4 @@
-# CPUArch
+# CPUArch - CPU Architecture ECE 4375 TTU
 
 ## CPU Architecture Implementation | Verilog Layout
 
