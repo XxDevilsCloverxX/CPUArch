@@ -3,7 +3,7 @@
 /*
 Name: Silas Rodriguez
 R-Number: R-11679913
-Assignment: Project 5
+Assignment: Project 6
 */
 
 module decoder(

@@ -1,14 +1,32 @@
 /*
     Name: Silas Rodriguez
     R-Number: R-11679913
-    Assignment: Project 3 
+    Assignment: Project 6
 */
+/**
 
+    * ALU.v
+    * This module is responsible for performing the arithmetic and logic operations
+    * Inputs:
+    *  clk - Clock signal
+    *  a - Data from register A
+    *  b - Data from register B
+    *  op - Operation to be performed
+
+    * Outputs:
+    *  out - Result of operation
+    *  zflag - Zero flag
+    *  nflag - Negative flag
+    *  cflag - Carry flag
+    *  vflag - Two's compliment overflow flag
+    *  sflag - Sign flag
+    *  hflag - Half carry flag
+*/
 module alu (
-    input clk,
-    input [31:0] a,
-    input [31:0] b,
-    input [4:0] op,
+    input clk,          //clock
+    input [31:0] a,    //input a data bus
+    input [31:0] b,    //input b data bus
+    input [4:0] op,    //operation to be performed
 
     output reg [31:0] out,
     output reg zflag,      //zero flag
@@ -112,18 +130,18 @@ module alu (
             //BZ
             5'h10: begin
                 if (zflag == 1) begin
-                    out = a;    // the address to jump to is in a
+                    out = b;    // the address to jump to is in b (litsrc)
                 end
             end
             //BNZ
             5'h11: begin
                 if (zflag == 0) begin
-                    out = a;    // the address to jump to is in a
+                    out = b;    // the address to jump to is in b (litsrc)
                 end
             end
             //BRA
             5'h12:
-                out = a;    // the address to jump to is in a
+                out = b;    // the address to jump to is in b (litsrc)
         endcase
     end
 
