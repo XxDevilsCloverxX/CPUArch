@@ -38,6 +38,7 @@ module ProgramCounter (
         end 
         else if (branch) begin
             pc_out = pc_in;   // Branch to the address being passed in
+            addr = pc_in;     // Set the address register to the address being passed in
         end
         else begin
             pc_out = addr;    // Increment the program counter
