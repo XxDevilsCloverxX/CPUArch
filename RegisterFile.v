@@ -44,7 +44,7 @@ module RegisterFile(
     assign b_data = registers[b_addr];
 
     //update every clk cycle
-    always @(posedge clk) begin
+    always @(negedge clk) begin
         //reset the registers if reset is high
         if (reset) begin
             registers[0] <= 32'h00000000;

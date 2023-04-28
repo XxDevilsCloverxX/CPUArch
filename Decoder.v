@@ -6,6 +6,20 @@ R-Number: R-11679913
 Assignment: Project 6
 */
 
+/**
+* This module is responsible for decoding the instructions and passing them to the data path.
+* The decoder takes in the instruction and passes it to the data path on seperate busses.
+* The decoder also determines if the instruction is a branch or store instruction.
+* The decoder is a combinational circuit.
+* @param instruction is the instruction to be decoded.
+* @param litsrc is the literal or source of the instruction.
+* @param dst is the destination register of the instruction.
+* @param src is the source register of the instruction.
+* @param mode is the addressing mode of the instruction.
+* @param op is the operation of the instruction for the ALU.
+* @param branch is the branch signal.
+* @param store is the store signal.
+*/
 module decoder(
     input [48:0] instruction,
     output wire [31:0] litsrc,

@@ -80,6 +80,5 @@ module BusMux(
             end
         endcase
     end
-    end
 
 endmodule
