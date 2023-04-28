@@ -26,7 +26,7 @@ module decoder(
     output wire [4:0] dst,
     output wire [4:0] src,
     output wire [1:0] mode,
-    output wire [4:0] op
+    output wire [4:0] op,
     output wire branch,
     output wire store
 );

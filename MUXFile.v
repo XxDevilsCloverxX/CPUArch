@@ -62,7 +62,7 @@ module BusMux(
     input [31:0] GPR,
     input [31:0] RAM,
     output reg [31:0] B
-)
+);
 
     always @(*) begin
         case (mode)
