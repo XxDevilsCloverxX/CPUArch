@@ -13,6 +13,8 @@ module decoder(
     output wire [4:0] src,
     output wire [1:0] mode,
     output wire [4:0] op
+    output wire branch,
+    output wire store
 );
 
     /*
@@ -25,13 +27,6 @@ module decoder(
     assign dst = instruction[36:32];
     assign litsrc = instruction[31:0];
     
-    /*
-        Immediately, all instructions are going to pipeline registers to be executed properly
-        op -> Eventually ALU so that the ALU executes the operation
-        mode -> MUX right before ALU and after in order to pass allow the correct data into the ALU on A and B bus
-                and store to the correct address
-        src -> register file to get the select register
-        dst -> register file / POST ALU mux to store outputs to right location
-        litsrc ->  generate this number in Hex, and register file, a mux will select which to use.
-    */
+    assign branch = ((instruction[48:44] == 5'h10)||(instruction[48:44] == 5'h11)||(instruction[48:44] == 5'h12));  // Branch is determined by the op code
+    assign store = (instruction[48:44] == 5'h02);   // Store is determined by the op code
 endmodule

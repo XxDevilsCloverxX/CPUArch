@@ -115,3 +115,11 @@ The CPU has a 49-bit instruction set. The instruction set is broken up into 5-bi
 0x11: `BNZ` - Branch if Not Zero
 
 0x12: `BRA` - Branch
+
+### MUXFile
+
+This module defines the multiplexers used in the CPU. The multiplexers are used destination from the ALU and the input for bus B of the ALU. The multiplexers are implemented as a case statement that updates the output busses based on the control signal.
+
+> For the input multiplexer, the control signal is the 2-bit addressing mode.
+
+> For the output multiplexer, the control signal is the 2-bits of branch flag and store flag. If neither is set, the default is to writeback to the register file.
