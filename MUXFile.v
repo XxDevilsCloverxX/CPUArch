@@ -24,7 +24,7 @@ module OutputMux(
     output reg [31:0] PC
 );
     // This module is responsible for taking the output of the ALU and passing it to the correct destination
-    always @({store, branch}) begin
+    always @(*) begin
         case ({store, branch})
             2'b01: begin
                 GPR = 0;
@@ -64,7 +64,7 @@ module BusMux(
     output reg [31:0] B
 )
 
-    always @(mode) begin
+    always @(*) begin
         case (mode)
             // immediate addressing
             2'b00: begin

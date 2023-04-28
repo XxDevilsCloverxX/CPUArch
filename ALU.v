@@ -23,7 +23,6 @@
     *  hflag - Half carry flag
 */
 module alu (
-    input clk,          //clock
     input [31:0] a,    //input a data bus
     input [31:0] b,    //input b data bus
     input [4:0] op,    //operation to be performed
@@ -39,7 +38,7 @@ module alu (
     //I want this flag to update when the status register changes
     assign sflag = nflag ^ vflag;
     
-    always @(negedge clk) begin
+    always @(*) begin
         case (op)
             //LD -> flags should remain what they were before
             5'h01: begin

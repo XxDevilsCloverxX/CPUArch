@@ -31,18 +31,18 @@ module ProgramCounter (
     
     reg [5:0] addr;            // Address register can address 64 locations of ROM
 
-    always @(posedge clk) begin
+    always @(negedge clk) begin
         if (rst) begin
-            pc_out = 0;      // Reset for the program counter
-            addr = 0;        // Reset for the address register
+            pc_out <= 0;      // Reset for the program counter
+            addr <= 0;        // Reset for the address register
         end 
         else if (branch) begin
-            pc_out = pc_in;   // Branch to the address being passed in
-            addr = pc_in;     // Set the address register to the address being passed in
+            pc_out <= pc_in;   // Branch to the address being passed in
+            addr <= pc_in;     // Set the address register to the address being passed in
         end
         else begin
-            pc_out = addr;    // Increment the program counter
-            addr = addr + 1;  // Increment the address register
+            pc_out <= addr;    // Increment the program counter
+            addr <= addr + 1;  // Increment the address register
         end
     end
 endmodule

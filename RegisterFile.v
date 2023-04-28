@@ -27,7 +27,7 @@ Assignment: Project 6
 */
 module RegisterFile(
     input clk,  //clock
-    input reset,  //reset
+    input rst,  //reset
     input rw,   //write enable
     input [4:0] d_addr,    //destination address
     input [4:0] a_addr,   //address of register A
@@ -46,7 +46,7 @@ module RegisterFile(
     //update every clk cycle
     always @(negedge clk) begin
         //reset the registers if reset is high
-        if (reset) begin
+        if (rst) begin
             registers[0] <= 32'h00000000;
             registers[1] <= 32'h00000000;
             registers[2] <= 32'h00000000;
