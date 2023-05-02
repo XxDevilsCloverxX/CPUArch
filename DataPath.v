@@ -26,6 +26,8 @@ module CPU(
 
     //create an instruction memory
 
+    //create a data memory
+
     //create a program counter
 
     //create a register file
@@ -33,5 +35,10 @@ module CPU(
     //create an ALU
 
     //create a decoder
+
+    //create a bus mux
+
+    //create an output mux
+
 
 endmodule

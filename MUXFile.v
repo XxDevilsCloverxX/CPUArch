@@ -16,12 +16,12 @@
 * @param PC - This is the output of the ALU when the destination is PC
 */
 module OutputMux(
-    input store,
-    input branch,
-    input [31:0] ALUBus,
-    output reg [31:0] GPR,
-    output reg [31:0] RAM,
-    output reg [31:0] PC
+    input store,    // store signal from decoder
+    input branch,   // branch signal from decoder
+    input [31:0] ALUBus,    // output of ALU
+    output reg [31:0] GPR,  // destination of ALU bus to GPR
+    output reg [31:0] RAM,  // destination of ALU bus to RAM
+    output reg [31:0] PC    // destination of ALU bus to Program Counter
 );
     // This module is responsible for taking the output of the ALU and passing it to the correct destination
     always @(*) begin
@@ -57,11 +57,11 @@ combinational logic is used to select the correct source
 * @param litsrc - This is the output of the ALU when the source is a literal
 */
 module BusMux(
-    input [1:0] mode,
-    input [31:0] litsrc,
-    input [31:0] GPR,
-    input [31:0] RAM,
-    output reg [31:0] B
+    input [1:0] mode,   // addressing mode from decoder
+    input [31:0] litsrc,    // literal source from decoder
+    input [31:0] GPR,   // output of ALU when source is GPR
+    input [31:0] RAM,   // output of ALU when source is RAM
+    output reg [31:0] B // output of ALU when source is literal
 );
 
     always @(*) begin
