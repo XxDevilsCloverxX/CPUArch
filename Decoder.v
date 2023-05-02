@@ -20,7 +20,7 @@ Assignment: Project 6
 * @param branch is the branch signal.
 * @param store is the store signal.
 */
-module decoder(
+module Decoder(
     input [48:0] instruction,
     output wire [31:0] litsrc,
     output wire [4:0] dst,
@@ -28,7 +28,8 @@ module decoder(
     output wire [1:0] mode,
     output wire [4:0] op,
     output wire branch,
-    output wire store
+    output wire store,
+    output wire writeback
 );
 
     /*
@@ -43,4 +44,5 @@ module decoder(
     
     assign branch = ((instruction[48:44] == 5'h10)||(instruction[48:44] == 5'h11)||(instruction[48:44] == 5'h12));  // Branch is determined by the op code
     assign store = (instruction[48:44] == 5'h02);   // Store is determined by the op code
+    assign writeback = ~branch & ~store;            // This allows the GPR writeback
 endmodule

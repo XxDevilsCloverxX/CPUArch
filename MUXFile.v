@@ -17,33 +17,33 @@
 */
 module OutputMux(
     input store,    // store signal from decoder
-    input branch,   // branch signal from decoder
+    input branch,   // branch signal from decoder & alu
+    input writeback,
     input [31:0] ALUBus,    // output of ALU
     output reg [31:0] GPR,  // destination of ALU bus to GPR
     output reg [31:0] RAM,  // destination of ALU bus to RAM
     output reg [31:0] PC    // destination of ALU bus to Program Counter
-);
+);    
     // This module is responsible for taking the output of the ALU and passing it to the correct destination
     always @(*) begin
-        case ({store, branch})
-            2'b01: begin
-                GPR = 0;
+        case ({store, branch, writeback})
+            3'b001: begin
+                RAM = 0;
+                PC = 0;
+                GPR = ALUBus;
+            end
+            3'b010: begin
                 RAM = 0;
                 PC = ALUBus;
-            end
-            2'b10: begin
                 GPR = 0;
+            end
+            3'b100: begin 
                 RAM = ALUBus;
                 PC = 0;
-            end
-            default: begin
-                GPR = ALUBus;
-                RAM = 0;
-                PC = 0;
+                GPR = 0;                
             end
         endcase
     end
-
 endmodule
 
 /**

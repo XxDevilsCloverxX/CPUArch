@@ -22,7 +22,7 @@
     *  sflag - Sign flag
     *  hflag - Half carry flag
 */
-module alu (
+module ALU(
     input [31:0] a,    //input a data bus
     input [31:0] b,    //input b data bus
     input [4:0] op,    //operation to be performed
@@ -33,12 +33,14 @@ module alu (
     output reg cflag,       //carry flag
     output reg vflag,       //two's compliment overflow flag
     output wire sflag,       //sign flag
-    output reg hflag       //half carry flag
+    output reg hflag,       //half carry flag
+    output reg branch       //if a branch is supposed to be taken
 );
     //I want this flag to update when the status register changes
     assign sflag = nflag ^ vflag;
     
     always @(*) begin
+        branch = 0; // reset the branch signal
         case (op)
             //LD -> flags should remain what they were before
             5'h01: begin
@@ -130,17 +132,21 @@ module alu (
             5'h10: begin
                 if (zflag == 1) begin
                     out = b;    // the address to jump to is in b (litsrc)
+                    branch = 1; //confirm branch is taken
                 end
             end
             //BNZ
             5'h11: begin
                 if (zflag == 0) begin
                     out = b;    // the address to jump to is in b (litsrc)
+                    branch = 1; //confirm branch is taken
                 end
             end
             //BRA
-            5'h12:
+            5'h12: begin
                 out = b;    // the address to jump to is in b (litsrc)
+                branch = 1; //confirm branch is takens
+            end
         endcase
     end
 
