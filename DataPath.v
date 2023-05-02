@@ -30,7 +30,7 @@ module CPU(
     wire [31:0] litsrc; //literal or source from instruction
     wire [31:0] RAMout; //data from RAM
     wire [31:0] RAMaddr;
-    wire [31:0] agpr, bgpr, B; //data from registers
+    wire [31:0] agpr, bgpr, A, B; //data from registers
     wire [31:0] ALUoutput; //ALU output
     wire [31:0] PortForward; //forwarded data from hazard detection unit
     wire [31:0] GPRwriteback, RAMwriteback, PCwriteback; //writeback data
@@ -41,7 +41,7 @@ module CPU(
     wire [1:0] mode, modeout;    //modes
     wire branch, store, writeback; //control signals
     wire zflag, nflag, sflag, cflag, hflag, vflag, branchflag; //flags
-    wire wea, stall, flush, rw;
+    wire wea, stall, flush, rw, modeA;
     
     // Pipeline registers - inputs to the modules
     reg [48:0] decode; //instruction from ROM
@@ -119,7 +119,7 @@ module CPU(
             store2 <= store;
             writeback2 <= writeback;
 
-            Adata2 <= agpr;
+            Adata2 <= A;
             Bdata2 <= B;
             
             // Stage 3 - Execute
@@ -199,6 +199,10 @@ module CPU(
     RegisterFile regfile(.clk(clk), .rst(reset), .rw(rw), .d_addr(dst5), .a_addr(src2), .b_addr(litsrc2[4:0]), .data(GPRwriteback),
     .a_data(agpr), .b_data(bgpr));
 
+    //create a mux for A bus
+    Amux abusmux(.mode(modeA), .GPR(agpr),.ALU(PortForward),
+    .A(A));
+
     //create a bus mux combinational logic
     BusMux busmux(.mode(modeout), .litsrc(litsrc2), .GPR(bgpr), .RAM(RAMout), .Overwrite(PortForward),
     .B(B)
@@ -213,7 +217,7 @@ module CPU(
     .GPR(GPRwriteback), .RAM(RAMwriteback), .PC(PCwriteback), .wea(wea), .rw(rw));
 
     // create a hazard detection unit
-    HazardDetector hazard(.srcexe(src2), .dstwb(dst4), .modein(mode2), .ALUoutput(ALUoutput4), .branch(branch4), .store(store4), .RAMaddr0(litsrc2), .RAMaddr1(litsrc4),
-    .modeout(modeout), .Forward(PortForward), .stall(stall), .RAMout(RAMaddr), .flush(flush));
+    HazardDetector hazard(.srcregA(src2), .srcregB(litsrc2), .dstwb(dst4), .modein(mode2), .ALUoutput(ALUoutput4), .branch(branch4), .store(store4), .RAMaddr0(litsrc2), .RAMaddr1(litsrc4),
+    .modeB(modeout), .Forward(PortForward), .stall(stall), .RAMout(RAMaddr), .flush(flush), .modeA(modeA));
 
 endmodule

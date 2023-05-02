@@ -161,5 +161,24 @@ module HazardDetector (
         end
     end
 
+endmodule
+
+module Amux(
+    input [31:0] Agpr,
+    input [31:0] ALU,
+    input mode,
+    output [31:0] A
+);
+
+    always @(*) begin
+        case (mode)
+            1'b1: begin
+                A = ALU;   // hazard detected, forward ALU
+            end
+            default: begin
+                A = Agpr;
+            end
+        endcase
+    end
 
 endmodule
