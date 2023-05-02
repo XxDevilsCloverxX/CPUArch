@@ -26,6 +26,12 @@ module ALU(
     input [31:0] a,    //input a data bus
     input [31:0] b,    //input b data bus
     input [4:0] op,    //operation to be performed
+    input zin,
+    input cin,
+    input vin,
+    input hin,
+    input nin,
+    input sin,
 
     output reg [31:0] out,
     output reg zflag,      //zero flag
@@ -40,7 +46,7 @@ module ALU(
     assign sflag = nflag ^ vflag;
     
     always @(*) begin
-        branch = 0; // reset the branch signal
+        branch = 0; //assume no branch
         case (op)
             //LD -> flags should remain what they were before
             5'h01: begin
@@ -130,14 +136,14 @@ module ALU(
             /////////////// This is branching section-> out mux must be set to program counter //////////////
             //BZ
             5'h10: begin
-                if (zflag == 1) begin
+                if (zin == 1) begin
                     out = b;    // the address to jump to is in b (litsrc)
                     branch = 1; //confirm branch is taken
                 end
             end
             //BNZ
             5'h11: begin
-                if (zflag == 0) begin
+                if (zin == 0) begin
                     out = b;    // the address to jump to is in b (litsrc)
                     branch = 1; //confirm branch is taken
                 end

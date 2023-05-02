@@ -24,25 +24,26 @@
 module ProgramCounter (
     input clk,                  // Clock signal
     input rst,                  // Reset signal
+    input en,                   // Enable signal - enables the program counter to increment
     input branch,               // Branch signal
     input [5:0] pcin,         // Program counter input
-    output reg [5:0] pcout    // Program counter output
+    output [5:0] pcout    // Program counter output
 );
     
+    assign pcout = addr;        // Assign the output to the address register
     reg [5:0] addr;            // Address register can address 64 locations of ROM
 
     always @(negedge clk) begin
         if (rst) begin
-            pcout <= 0;      // Reset for the program counter
             addr <= 0;        // Reset for the address register
         end 
-        else if (branch) begin
-            pcout <= pcin;   // Branch to the address being passed in
-            addr <= pcin;     // Set the address register to the address being passed in
-        end
-        else begin
-            pcout <= addr;    // Increment the program counter
-            addr <= addr + 1;  // Increment the address register
+        if (en) begin
+            if (branch) begin
+                addr <= pcin; // Branch to new address
+            end 
+            else begin
+                addr <= addr + 1; // Increment the address
+            end
         end
     end
 endmodule
