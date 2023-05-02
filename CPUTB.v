@@ -18,10 +18,17 @@ initial begin
     forever #5 pcclk = ~pcclk;
 end
 
-//memclk driver
+//reset driver  - 1 for 20ns to flush the pipeline
 initial begin
-    memclk = 0;
-    forever #20 memclk = ~memclk;
+    reset = 1;
+    #20 reset = 0;
 end
+
+CPU cpu(
+    .clk(clk),
+    .reset(reset),
+    .pcclk(pcclk)
+    .pcout(counter)
+);
 
 endmodule
