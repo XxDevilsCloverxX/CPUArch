@@ -21,8 +21,8 @@ Assignment: Project 6
 module CPU(
     input clk,      //clock
     input pcclk,    //program counter clock 2x faster than clk (for ROM)
+    input memclk,   //memory clock 1/2 speed than clk (for RAM)
     input reset    //reset
-    //output wire [31:0] GPR0 //General Purpose Register 0
 );
 
     // Wires - outputs from the modules
@@ -175,7 +175,7 @@ module CPU(
     //create an instruction memory
     blk_mem_gen_ROM ROM(
     .clka(clk),     // input wire clka
-    .ena(),         // input wire ena
+    .ena(memclk),         // input wire ena
     .addra(pcout),  // input wire [5 : 0] addra
     .douta(instruction)  // output wire [48 : 0] douta
     );
@@ -183,7 +183,7 @@ module CPU(
     //create a data memory
     blk_mem_gen_RAM RAM(
     .clka(clk),     // input wire clka
-    .ena(),       // input wire ena
+    .ena(memclk),       // input wire ena
     .wea(wea5),       // input wire [0 : 0] wea
     .addra(RAMaddr),       // input wire [7 : 0] addra
     .dina(RAMwriteback),        // input wire [31 : 0] dina
