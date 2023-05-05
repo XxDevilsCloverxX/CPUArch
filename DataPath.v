@@ -41,7 +41,7 @@ module CPU(
     wire [4:0] dst; //destination register
     wire [4:0] op;  //operation
     wire [1:0] mode, modeout;    //modes
-    wire branch, store, writeback; //control signals
+    wire branch, store, writeback, realbranch; //control signals
     wire zflag, nflag, sflag, cflag, hflag, vflag, branchflag; //flags
     wire wea, stall, flush, rw, modeA;
     
@@ -49,14 +49,16 @@ module CPU(
     reg [48:0] decode; //instruction from ROM
     reg [31:0] litsrc2, litsrc3, litsrc4; //literal or source from instruction
     reg [31:0] Adata2, Bdata2, Adata3, Bdata3; //data from registers
-    reg [31:0] ALUoutput3, ALUoutput4, ALUoutput5; //ALU output
+    reg [31:0] ALUoutput3, ALUoutput4; //ALU output
     reg [4:0] src2; //source register
-    reg [4:0] dst2, dst3,dst4, dst5; //destination register
+    reg [4:0] dst2, dst3,dst4; //destination register
     reg [4:0] op2, op3;  //operation
     reg [1:0] mode2;    //modes
-    reg branch2, store2, writeback2, branch3, store3, writeback3, branch4, store4, writeback4, branch5, store5, writeback5; //control signals
+    reg branch2, store2, writeback2, branch3, store3, writeback3, branch4, store4, writeback4; //control signals
     reg zin3, nin3, sin3, cin3, hin3, vin3, bflag3; //flags
-    reg wea5, stall4, flush4; //control signals    
+    reg wea4, stall4, flush4; //control signals    
+
+    assign realbranch = branch3 & bflag3; //branch if branch instruction and ALU flag is set
 
     //update the Pipeline on every clock cycle
     always @(negedge clk) begin
@@ -73,12 +75,10 @@ module CPU(
             Bdata3 <= 0;
             ALUoutput3 <= 0;
             ALUoutput4 <= 0;
-            ALUoutput5 <= 0;
             src2 <= 0;
             dst2 <= 0;
             dst3 <= 0;
             dst4 <= 0;
-            dst5 <= 0;
             op2 <= 0;
             op3 <= 0;
             mode2 <= 0;
@@ -91,9 +91,6 @@ module CPU(
             branch4 <= 0;
             store4 <= 0;
             writeback4 <= 0;
-            branch5 <= 0;
-            store5 <= 0;
-            writeback5 <= 0;
             zin3 <= 0;
             nin3 <= 0;
             sin3 <= 0;
@@ -101,7 +98,7 @@ module CPU(
             hin3 <= 0;
             vin3 <= 0;
             bflag3 <= 0;
-            wea5 <= 0;
+            wea4 <= 0;
             stall4 <= 0;
             flush4 <= 0;
         end
@@ -124,7 +121,7 @@ module CPU(
             Adata2 <= A;
             Bdata2 <= B;
             
-            // Stage 3 - Execute
+            // Stage 3 - Execute & Hazard Detection
             litsrc3 <= litsrc2; //forwarding if needed
             dst3 <= dst2;
             op3 <= op2;
@@ -143,14 +140,14 @@ module CPU(
             bflag3<= branchflag;
             ALUoutput3 <= ALUoutput;
 
-            // Stage 4 - Hazard Detection
-            litsrc4 <= litsrc3;
+            // Stage 4 - Writeback -> Pipeline is compared with stage 2 in the hazard detection unit
             dst4 <= dst3;
-            branch4 <= branch3 & bflag3; //branch if branch instruction and ALU flag is set
+            branch4 <= realbranch; //branch if branch instruction and ALU flag is set
             store4 <= store3;
             writeback4 <= writeback3;
             ALUoutput4 <= ALUoutput3;
-            
+            wea4 <= wea;
+
             flush4 <= flush;
             stall4 <= stall;
         end
@@ -160,17 +157,10 @@ module CPU(
             stall4 <= ~stall4; //unstall the pipeline at the next clock cycle
         end
 
-        // Stage 5 - Writeback - completes regardless of stall
-        dst5 <= dst4;
-        branch5 <= branch4; //branch if branch instruction and ALU flag is set
-        store5 <= store4;
-        writeback5 <= writeback4;
-        ALUoutput5 <= ALUoutput4;
-        wea5 <= wea;
     end
 
     //create a program counter sequential logic
-    ProgramCounter counter (.clk(pcclk), .rst(reset), .pcin(PCwriteback), .branch(branch5), .en(~stall4),
+    ProgramCounter counter (.clk(pcclk), .rst(reset), .pcin(PCwriteback), .branch(branch4), .en(~stall4),
     .pcout(pcout)
     );
 
@@ -186,7 +176,7 @@ module CPU(
     blk_mem_gen_RAM RAM(
     .clka(clk),     // input wire clka
     .ena(pcclk),       // input wire ena
-    .wea(wea5),       // input wire [0 : 0] wea
+    .wea(wea4),       // input wire [0 : 0] wea
     .addra(RAMaddr),       // input wire [7 : 0] addra
     .dina(RAMwriteback),        // input wire [31 : 0] dina
     .douta(RAMout)    // output wire [31 : 0] douta
@@ -198,7 +188,7 @@ module CPU(
     );
 
     //create a register file sequential & combinational logic
-    RegisterFile regfile(.clk(clk), .rst(reset), .rw(rw), .d_addr(dst5), .a_addr(src2), .b_addr(litsrc2[4:0]), .data(GPRwriteback),
+    RegisterFile regfile(.clk(clk), .rst(reset), .rw(rw), .d_addr(dst4), .a_addr(src2), .b_addr(litsrc2[4:0]), .data(GPRwriteback),
     .a_data(agpr), .b_data(bgpr));
 
     //create a mux for A bus
@@ -215,11 +205,23 @@ module CPU(
     .out(ALUoutput), .zflag(zflag), .nflag(nflag), .sflag(sflag), .cflag(cflag), .hflag(hflag), .branch(branchflag), .vflag(vflag));
     
     //create an output mux combinational logic
-    OutputMux outmux(.store(store5), .branch(branch5), .writeback(writeback5), .ALUBus(ALUoutput5),
+    OutputMux outmux(.store(store4), .branch(branch4), .writeback(writeback4), .ALUBus(ALUoutput4),
     .GPR(GPRwriteback), .RAM(RAMwriteback), .PC(PCwriteback), .wea(wea), .rw(rw));
 
     // create a hazard detection unit
-    HazardDetector hazard(.srcregA(src2), .srcregB(litsrc2), .dstwb(dst4), .modein(mode2), .ALUoutput(ALUoutput4), .branch(branch4), .store(store4), .RAMaddr0(litsrc2), .RAMaddr1(litsrc4),
+    HazardDetector hazard(.srcregA(src2), .srcregB(litsrc2), .dstwb(dst3), .modein(mode2), .ALUoutput(ALUoutput3), .branch(realbranch), .store(store3), .RAMaddr0(litsrc2), .RAMaddr1(litsrc3),
     .modeB(modeout), .Forward(PortForward), .stall(stall), .RAMout(RAMaddr), .flush(flush), .modeA(modeA));
 
 endmodule
+
+/**
+    A note about this module:
+    This module is responsible for organizing the CPU architecthure and connecting all the modules together.
+    The CPU module is the top level module that connects all the other modules together. It is responsible for
+    creating the pipeline registers and connecting the modules together. Pipeline registers are used to store
+    the outputs of the modules and are updated on every clock cycle. The CPU writeback occurs every clock cycle
+    regardless of whether the pipeline is stalled or not. This is because the writeback is done in the output mux,
+    which is a combinational logic. The register updated as a result of the writeback is determined by the register file,
+    which is a sequential logic. The register file is updated on every clock cycle, but the register file only updates
+    the register if the rw signal is set. The rw signal is set by the output mux, which is a combinational logic.
+*/ 
