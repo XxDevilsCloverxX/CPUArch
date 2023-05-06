@@ -4,7 +4,7 @@
 
 ### Introduction
 
-This is a CPU architecture implementation for the ECE 4375 course at Texas Tech University. The CPU is a 32-bit architecture with 49-bit instructions. The CPU is a 5-stage pipeline with a 49-bit instruction fetch, 49-bit instruction decoder, and a 49x64 bit ROM memory access with a 1KB RAM. The CPU has 32 32-bit general purpose registers (GPRs), 6-bit program counter, ALU. The CPU has 14 instructions in the instruction set.
+This is a CPU architecture implementation for the ECE 4375 course at Texas Tech University. The CPU is a 32-bit architecture with 49-bit instructions. The CPU is a 5-stage pipeline with a 49-bit instruction fetch, 49-bit instruction decoder, and a 49x64 bit ROM memory access with a 1KB RAM. The CPU has 32 32-bit general purpose registers (GPRs), 6-bit program counter, ALU. The CPU has 14 instructions in the instruction set. The modules are implemented mostly with combinational logic with sequential logic for the pipeline registers. These pipeline registers are essentially just flip flops that lie between each stage of the pipeline. The CPU is implemented in Verilog and tested using Vivado 2022.1.
 
 ### Register File
 
@@ -118,7 +118,7 @@ The CPU has a 49-bit instruction set. The instruction set is broken up into 5-bi
 
 ### MUXFile
 
-This module defines the multiplexers used in the CPU. The multiplexers are used destination from the ALU and the input for bus B of the ALU. The multiplexers are implemented as a case statement that updates the output busses based on the control signal.
+This module defines the multiplexers used in the CPU. The multiplexers are used destination from the ALU and the input for bus B of the ALU. The multiplexers are implemented as a case statement that updates the output busses based on the control signal. This also contains the hazard detection unit used for ensuring that the CPU does not have any data hazards. The hazard detection unit is implemented as a case statement that checks the current instruction and the previous instruction for any data hazards. If a data hazard is detected, the hazard detection unit will attempt to overwrite the input data for the ALU with the correct data. If the data is not available, the hazard detection unit will stall the pipeline until the data is available. Additionally, the hazard detection unit will attempt to temporarily disable the pipeline on store instructions by one clock cycle in order to allow the RAM to write the data to memory properly.
 
 > For the input multiplexer, the control signal is the 2-bit addressing mode.
 
