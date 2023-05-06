@@ -1,9 +1,9 @@
-`timescale 1ns / 1ps
+`timescale 1ns/1ps
 
 /*
-Name: Silas Rodriguez
-R-Number: R-11679913
-Assignment: Project 6
+    Name: Silas Rodriguez
+    R-Number: R-11679913
+    Assignment: Project 6
 */
 
 /**
