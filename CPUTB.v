@@ -2,7 +2,7 @@ module CPUTB;
 
 reg clk;
 reg reset;
-reg pcclk;
+reg memen;
 
 wire [5:0] counter;
 
@@ -12,10 +12,10 @@ initial begin
     forever #10 clk = ~clk;
 end
 
-//pcclk driver
+//memen driver
 initial begin
-    pcclk = 0;
-    forever #5 pcclk = ~pcclk;
+    memen = 0;
+    forever #20 memen = ~memen;
 end
 
 //reset driver  - 1 for 20ns to flush the pipeline
@@ -27,8 +27,8 @@ end
 CPU cpu(
     .clk(clk),
     .reset(reset),
-    .pcclk(pcclk)
-    .pcout(counter)
+    .memen(memen),
+    .counter(counter)
 );
 
 endmodule

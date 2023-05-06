@@ -23,8 +23,8 @@ module OutputMux(
     output reg [31:0] GPR,  // destination of ALU bus to GPR
     output reg [31:0] RAM,  // destination of ALU bus to RAM
     output reg [31:0] PC,    // destination of ALU bus to Program Counter
-    output wea,
-    output rw
+    output reg wea,
+    output reg rw
 );    
     // This module is responsible for taking the output of the ALU and passing it to the correct destination
     always @(*) begin
@@ -113,45 +113,61 @@ endmodule
     * @param flush - This is the flush signal
 */
 module HazardDetector (
-    input [4:0] srcexe,        //source register
+    //ALU bus hazard detection
+    input [4:0] srcRegA,        //source register
+    input [4:0] srcRegB,        //source register
     input [4:0] dstwb,        //destination register
-
     input [1:0] modein,     //Mux select input
-    output reg [1:0] modeout,   //mux select overwrite
-    
+    output reg [1:0] modeB,   //mux select overwrite
+    output reg modeA,           //mux A select overwrite
+    //ALU forwarding
     input [31:0] ALUoutput, //ALU output
     output reg [31:0] Forward,        // forward the ALU output to the execute stage
-    
+    //RAM bus hazard detection
     input [31:0] RAMaddr0,   //RAM address to be accessed to
     input [31:0] RAMaddr1,   //RAM address to be written to
     input store,            //store signal
     output reg stall,       //stall signal
+    input stalled,          //stalled signal from the execute stage
     output reg [31:0] RAMout,   //RAM output to be written to
 
-    input branch,     //branch enable signal
-    output flush            //flush signal
+    //branch hazard detection
+    input branch,               //branch enable signal
+    output reg flush            //flush signal
 );
     
+
     always @(*) begin
-        // data dependency hazard detection -> forward ALU output before writeback failure
-        if (srcexe == dstwb) begin
-            modeout = 2'b11;     //mode override for B mux
+        //assume no hazards
+        modeB = modein;
+        modeA = 0;
+        // data dependency hazard detection -> forward ALU output before writeback failure. Do not overwrite branch outputs branch signal is from ALU
+        if (srcRegB == dstwb && ~branch) begin
+            modeB = 2'b11;     //mode override for B mux
             Forward = ALUoutput; //update the forward bus
-        end 
-        else begin
-            modeout = modein;   //normal operation
+        end
+        if (srcRegA == dstwb) begin
+            modeA = 1;
+            Forward = ALUoutput;
         end
 
         // RAM writeback hazard detection -> forward RAM output before writeback failure
         if (store) begin
-            stall = 1'b1;       //stall the pipeline from advancing
-            RAMout = RAMaddr1;  //forward the RAM address to be written to
+            stall = 1'b1;       //stall the pipeline from advancing 
         end
         else begin
             stall = 1'b0;       //normal operation
-            RAMout = RAMaddr0;  //forward the RAM address to be read from
         end
-
+        
+        // RAM read hazard detection -> forward RAM output before writeback failure
+        if  (stalled) begin
+            RAMout = RAMaddr1;  //forward the RAM address to be written to
+            stall = 1'b0;       //unstall the pipeline from advancing
+        end
+        else begin
+            RAMout = RAMaddr0;  //normal operation
+        end
+        
         // branch hazard detection -> flush the pipeline
         if (branch) begin
             flush = 1'b1;       //flush the pipeline
@@ -167,7 +183,7 @@ module Amux(
     input [31:0] Agpr,
     input [31:0] ALU,
     input mode,
-    output [31:0] A
+    output reg [31:0] A
 );
 
     always @(*) begin

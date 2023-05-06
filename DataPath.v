@@ -20,7 +20,7 @@ Assignment: Project 6
 */
 module CPU(
     input clk,      //clock
-    input pcclk,    //program counter clock 2x faster than clk (for ROM)
+    input memen,    //memory enable signal -> half speed of clk
     input reset,    //reset
     output [5:0] counter //counter for debugging
 );
@@ -41,133 +41,121 @@ module CPU(
     wire [4:0] dst; //destination register
     wire [4:0] op;  //operation
     wire [1:0] mode, modeout;    //modes
-    wire branch, store, writeback, realbranch; //control signals
-    wire zflag, nflag, sflag, cflag, hflag, vflag, branchflag; //flags
+    wire branch, store, writeback; //control signals
+    wire zflag, nflag, sflag, cflag, hflag, vflag; //flags
     wire wea, stall, flush, rw, modeA;
     
     // Pipeline registers - inputs to the modules
-    reg [48:0] decode; //instruction from ROM
-    reg [31:0] litsrc2, litsrc3, litsrc4; //literal or source from instruction
-    reg [31:0] Adata2, Bdata2, Adata3, Bdata3; //data from registers
-    reg [31:0] ALUoutput3, ALUoutput4; //ALU output
-    reg [4:0] src2; //source register
-    reg [4:0] dst2, dst3,dst4; //destination register
-    reg [4:0] op2, op3;  //operation
-    reg [1:0] mode2;    //modes
-    reg branch2, store2, writeback2, branch3, store3, writeback3, branch4, store4, writeback4; //control signals
-    reg zin3, nin3, sin3, cin3, hin3, vin3, bflag3; //flags
-    reg wea4, stall4, flush4; //control signals    
-
-    assign realbranch = branch3 & bflag3; //branch if branch instruction and ALU flag is set
-
+    reg [48:0] decode; //instruction from ROM -
+    reg [31:0] litsrc2, litsrc3; //literal or source from instruction -
+    reg [31:0] Adata3, Bdata3; //data from registers -
+    reg [31:0] ALUoutput4; //ALU output -
+    reg [4:0] src2; //source register -
+    reg [4:0] dst2, dst3,dst4; //destination register- 
+    reg [4:0] op2, op3;  //operation-
+    reg [1:0] mode2;    //modes-
+    reg store2, writeback2, store3, writeback3, branch4, store4, writeback4; //control signals
+    reg zin4, nin4, sin4, cin4, hin4, vin4; //flags
+    reg wave, stall4, flush4; //control signals    
+    
     //update the Pipeline on every clock cycle
     always @(negedge clk) begin
-
+        wave = ~wave;   //this times the instructions coming from ROM with pipeline
+        
         //Pipeline registers - cleared on resets or flushes
         if (reset | flush4) begin
+            //control signals
+            wave <= 0;
+            flush4 <=0;
+            stall4 <=0;
+            //stage 1 pipeline
             decode <= 0;
+            //stage 2 pipeline
             litsrc2 <= 0;
-            litsrc3 <= 0;
-            litsrc4 <= 0;
-            Adata2 <= 0;
-            Bdata2 <= 0;
-            Adata3 <= 0;
-            Bdata3 <= 0;
-            ALUoutput3 <= 0;
-            ALUoutput4 <= 0;
             src2 <= 0;
             dst2 <= 0;
-            dst3 <= 0;
-            dst4 <= 0;
             op2 <= 0;
-            op3 <= 0;
-            mode2 <= 0;
-            branch2 <= 0;
             store2 <= 0;
             writeback2 <= 0;
-            branch3 <= 0;
+            mode2 <= 0;
+            //stage 3 pipeline
+            litsrc3 <= 0;
+            Adata3 <= 0;
+            Bdata3 <= 0;
+            dst3 <= 0;
+            op3 <= 0;
             store3 <= 0;
             writeback3 <= 0;
+            //stage 4 pipeline            
+            ALUoutput4 <= 0;
             branch4 <= 0;
             store4 <= 0;
             writeback4 <= 0;
-            zin3 <= 0;
-            nin3 <= 0;
-            sin3 <= 0;
-            cin3 <= 0;
-            hin3 <= 0;
-            vin3 <= 0;
-            bflag3 <= 0;
-            wea4 <= 0;
-            stall4 <= 0;
-            flush4 <= 0;
-        end
+            zin4 <= 0;
+            nin4 <= 0;
+            sin4 <= 0;
+            cin4 <= 0;
+            hin4 <= 0;
+            vin4 <= 0;
+            dst4 <= 0;
+            end
 
-        // Stage 1-4 only completes if not stalled by hazard detection unit - stalls occur when there is a store instruction in the pipeline
-        else if (~stall4) begin
-            // Stage 1 - Fetch
-            decode <= instruction;
-
-            // Stage 2 - Decode and Register Fetch
-            litsrc2 <= litsrc;
-            src2 <= src;
-            dst2 <= dst;
-            op2 <= op;
-            mode2 <= mode;
-            branch2 <= branch;
-            store2 <= store;
-            writeback2 <= writeback;
-
-            Adata2 <= A;
-            Bdata2 <= B;
+        // Stage 1-4 only completes if not stalled by hazard detection unit "Stage Changes"
+        else if (wave) begin
             
-            // Stage 3 - Execute & Hazard Detection
-            litsrc3 <= litsrc2; //forwarding if needed
-            dst3 <= dst2;
-            op3 <= op2;
-            branch3 <= branch2;
-            store3 <= store2;
-            writeback3 <= writeback2;
-            Adata3 <= Adata2;
-            Bdata3 <= Bdata2;
-
-            zin3 <= zflag;
-            nin3 <= nflag;
-            sin3 <= sflag;
-            cin3 <= cflag;
-            hin3 <= hflag;
-            vin3 <= vflag;
-            bflag3<= branchflag;
-            ALUoutput3 <= ALUoutput;
-
-            // Stage 4 - Writeback -> Pipeline is compared with stage 2 in the hazard detection unit
+            if(~stall4) begin
+                // Stage 1 - Fetch
+                decode <= instruction;
+    
+                // Stage 2 - Decode
+                litsrc2 <= litsrc;
+                src2 <= src;
+                dst2 <= dst;
+                op2 <= op;
+                mode2 <= mode;
+                store2 <= store;
+                writeback2 <= writeback;
+                
+                // Stage 3 - Register Fetch
+                Adata3 <= A;
+                Bdata3 <= B;
+                litsrc3 <= litsrc2; //forwarding for hazard detector
+                dst3 <= dst2;
+                op3 <= op2;
+                store3 <= store2;
+                writeback3 <= writeback2;
+            end
+        // Stage 4 - Execute & Hazard Detection
             dst4 <= dst3;
-            branch4 <= realbranch; //branch if branch instruction and ALU flag is set
+            branch4 <= branchflag; //ALU output for if a branch instruction was taken
             store4 <= store3;
             writeback4 <= writeback3;
-            ALUoutput4 <= ALUoutput3;
-            wea4 <= wea;
-
+            zin4 <= zflag;
+            nin4 <= nflag;
+            sin4 <= sflag;
+            cin4 <= cflag;
+            hin4 <= hflag;
+            vin4 <= vflag;
+            ALUoutput4 <= ALUoutput;
+            stall4 <= stall; // this is used to stall the pipeline, but also to unstall it
             flush4 <= flush;
-            stall4 <= stall;
-        end
-
-        // Only executes if stalled by hazard detection unit
-        else if (stall4) begin
-            stall4 <= ~stall4; //unstall the pipeline at the next clock cycle
-        end
-
+        // Stage 5 - Writeback - "Commit changes"
+        /*
+            This section does not need to be timed with the pipeline, as it is not dependent on the previous stages.
+            It is only dependent on the control signals from the previous stages.
+            This section is executed every clock cycle via the register file, Program counter, RAM and output mux modules.
+        */
     end
-
+end
     //create a program counter sequential logic
-    ProgramCounter counter (.clk(pcclk), .rst(reset), .pcin(PCwriteback), .branch(branch4), .en(~stall4),
+    ProgramCounter Pcounter (.clk(memen), .rst(reset), .pcin(PCwriteback), .branch(branch4), .en(~stall4),
     .pcout(pcout)
     );
 
     //create an instruction memory
     blk_mem_gen_ROM ROM(
     .clka(clk),     // input wire clka
-    .ena(pcclk),         // input wire ena
+    .ena(memen),         // input wire ena
     .addra(pcout),  // input wire [5 : 0] addra
     .douta(instruction)  // output wire [48 : 0] douta
     );
@@ -175,8 +163,8 @@ module CPU(
     //create a data memory
     blk_mem_gen_RAM RAM(
     .clka(clk),     // input wire clka
-    .ena(pcclk),       // input wire ena
-    .wea(wea4),       // input wire [0 : 0] wea
+    .ena(memen),       // input wire ena
+    .wea(wea),       // input wire [0 : 0] wea
     .addra(RAMaddr),       // input wire [7 : 0] addra
     .dina(RAMwriteback),        // input wire [31 : 0] dina
     .douta(RAMout)    // output wire [31 : 0] douta
@@ -184,7 +172,7 @@ module CPU(
     
     //create a decoder combinational logic
     Decoder decoder(.instruction(decode),
-    .litsrc(litsrc),.src(src), .dst(dst), .mode(mode), .branch(branch), .op(op), .store(store), .writeback(writeback)
+    .litsrc(litsrc),.src(src), .dst(dst), .mode(mode), .op(op), .branch(branch), .store(store), .writeback(writeback)
     );
 
     //create a register file sequential & combinational logic
@@ -192,7 +180,7 @@ module CPU(
     .a_data(agpr), .b_data(bgpr));
 
     //create a mux for A bus
-    Amux abusmux(.mode(modeA), .GPR(agpr),.ALU(PortForward),
+    Amux abusmux(.mode(modeA), .Agpr(agpr),.ALU(PortForward),
     .A(A));
 
     //create a bus mux combinational logic
@@ -201,7 +189,7 @@ module CPU(
     );
 
     //create an ALU combinational logic
-    ALU alu(.a(Adata3), .b(Bdata3), .op(op3), .zin(zin3), .cin(cin3), .vin(vin3), .hin(hin3), .sin(sin3), .nin(nin3),
+    ALU alu(.a(Adata3), .b(Bdata3), .op(op3), .zin(zin4), .cin(cin4), .vin(vin4), .hin(hin4), .sin(sin4), .nin(nin4),
     .out(ALUoutput), .zflag(zflag), .nflag(nflag), .sflag(sflag), .cflag(cflag), .hflag(hflag), .branch(branchflag), .vflag(vflag));
     
     //create an output mux combinational logic
@@ -209,8 +197,8 @@ module CPU(
     .GPR(GPRwriteback), .RAM(RAMwriteback), .PC(PCwriteback), .wea(wea), .rw(rw));
 
     // create a hazard detection unit
-    HazardDetector hazard(.srcregA(src2), .srcregB(litsrc2), .dstwb(dst3), .modein(mode2), .ALUoutput(ALUoutput3), .branch(realbranch), .store(store3), .RAMaddr0(litsrc2), .RAMaddr1(litsrc3),
-    .modeB(modeout), .Forward(PortForward), .stall(stall), .RAMout(RAMaddr), .flush(flush), .modeA(modeA));
+    HazardDetector hazard(.srcRegA(src2), .srcRegB(litsrc2[4:0]), .dstwb(dst3), .modein(mode2), .ALUoutput(ALUoutput),.branch(branchflag), .store(store3), .RAMaddr0(litsrc2), .RAMaddr1(litsrc3),
+    .modeB(modeout), .Forward(PortForward), .stalled(stall4), .stall(stall), .RAMout(RAMaddr), .flush(flush), .modeA(modeA));
 
 endmodule
 

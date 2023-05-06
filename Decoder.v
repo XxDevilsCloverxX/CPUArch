@@ -42,7 +42,7 @@ module Decoder(
     assign dst = instruction[36:32];
     assign litsrc = instruction[31:0];
     
-    assign branch = ((instruction[48:44] == 5'h10)||(instruction[48:44] == 5'h11)||(instruction[48:44] == 5'h12));  // Branch is determined by the op code
+    assign branch = (instruction[48:44]== 5'h10 ||instruction[48:44]== 5'h11||instruction[48:44]== 5'h12);
     assign store = (instruction[48:44] == 5'h02);   // Store is determined by the op code
     assign writeback = ~branch & ~store;            // This allows the GPR writeback
 endmodule
