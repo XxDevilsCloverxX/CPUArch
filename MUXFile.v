@@ -179,6 +179,14 @@ module HazardDetector (
 
 endmodule
 
+/**
+* This module is responsible for taking the output of the Decoder and selecting the correct source for the A bus of the ALU (GPR or ALU)
+combinational logic is used to select the correct source
+* @param Agpr - This is the output of the ALU when the source is a GPR
+* @param ALU - This is the output of the ALU when the source is ALU
+* @param mode - This is addressing mode from the decoder
+* @param A - This is the output of the mux
+*/
 module Amux(
     input [31:0] Agpr,
     input [31:0] ALU,

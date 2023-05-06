@@ -16,7 +16,7 @@ Assignment: Project 6
     *  reset - External Reset signal
     
     * Outputs:
-    *  None
+    *  counter - This is the counter for debugging purposes shows what instruction is currently being addressed
 */
 module CPU(
     input clk,      //clock
