@@ -1,10 +1,14 @@
 /*
 add-sub.v
-Developed By: Khisa Lebrun @ Texas Tech University
+Developed By: Silas Rodriguez @ Texas Tech University
 */
 
 /**
-	full_adder - Adder Logic for the 1 bit numbers
+	@brief: full_adder - Adder Logic for 1 bit numbers
+ 	@input A, B: Bits to be added
+  	@input Cin: Carried bit from previous adder, or select
+   	@output Cout: Carry bit from adder
+    	@output S: Sum of A + B + Cin
 */
 module full_adder(A, B, Cin, Cout, S);
 	input A, B, Cin;
@@ -14,7 +18,10 @@ module full_adder(A, B, Cin, Cout, S);
 endmodule
 
 /**
-	top - adder subtractor control level
+	@brief: top - Full adder subtractor control level
+ 	@input: A, B: Numbers to be added
+  	@input S: 'Select' 0 for add, 1 for subtract
+   	@output F: Sum of A+B or Difference A-B
 */
 module top(A, B, S, F);
 	input [31:0] A, B;		// Numbers to be added
@@ -36,7 +43,9 @@ module top(A, B, S, F);
 	endgenerate
 endmodule
 
-/* testbench.v */
+/**
+	@brief: testbench simulation for top module
+*/
 module testbench;
 	// Change this parameter for larger numbers : 2 ** 32 Max = 4294967296, chose 8 Bit for "8 bit registers in assembly"
 	parameter N = (2**8);
@@ -80,8 +89,3 @@ module testbench;
         $finish;
     end
 endmodule
-
-/**
-	I recieved tutoring from Silas Rodriguez during this. 
-	I just wanted to be upfront so that I didn't lose credit
-**/
