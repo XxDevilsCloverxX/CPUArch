@@ -34,7 +34,7 @@ module top(A, B, S, F);
 	generate
 		for (i = 0; i<32; i = i+1) begin
 			if (i==0) begin
-				full_adder u32 (.A(A[0]), .B(B[0] ^ S), .Cin(S), .Cout(carrywires[0]), .S(F[0]));				// 0th adder to take S
+				full_adder u0 (.A(A[0]), .B(B[0] ^ S), .Cin(S), .Cout(carrywires[0]), .S(F[0]));				// 0th adder to take S
 			end
 			else begin
 				full_adder ui (.A(A[i]), .B(B[i] ^ S), .Cin(carrywires[i-1]), .Cout(carrywires[i]), .S(F[i]));	// ith adder
